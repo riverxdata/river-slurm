@@ -1,0 +1,65 @@
+---
+- name: Common set up
+  hosts: all
+  become: true
+  become_user: root
+  roles:
+    - hosts
+    - slurm-common
+    - utilities
+    - mambaorg.micromamba
+    - geerlingguy.docker
+    - prometheus-node-exporter
+    - abims_sbr.singularity
+    - nextflow
+
+- name: Slurm master
+  hosts: slurm_master
+  become: true
+  become_user: root
+  roles:
+    # - role: s3storage
+    #   S3_MOUNTS:
+    #     - fs: 'example_project'
+    - role: nis
+      NIS_MASTER: "{{groups.slurm_master[0]}}"
+    - slurm-master
+    - prometheus-slurm-exporter
+    - prometheus
+    - grafana
+    - reverse-proxy
+    - alertmanager
+    - rsyslog_server
+    - nextflow-demo
+    - role: 'nfs-server'
+      NFS_EXPORTS:
+        - path: '/home/'
+          clients: "{{groups.slurm_worker + groups.slurm_submit|default([])}}"
+        - path: '/data/'
+          clients: "{{groups.slurm_worker + groups.slurm_submit|default([])}}"
+  tasks:
+    - service:
+        name=slurmctld
+        state=restarted
+    - service:
+        name=slurmdbd
+        state=restarted
+
+- name: Slurm worker
+  hosts: slurm_worker
+  become: true
+  become_user: root
+  roles:
+    - role: nis
+      NIS_MASTER: "{{groups.slurm_master[0]}}"
+    - slurm-worker
+    - server-code
+    - rsyslog_client
+    - role: 'nfs-client'
+      NFS_MOUNTS:
+        - fs: '{{groups.slurm_master[0]}}:/home'
+          mountpoint: '/home'
+  tasks:
+    - service:
+        name=slurmd
+        state=restarted
