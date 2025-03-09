@@ -1,6 +1,28 @@
 ---
-
+slurm_version: "24.11.2"
+slurm_build_dir: "/tmp/slurm-{{ slurm_version }}"
+slurm_src_url: "https://download.schedmd.com/slurm/slurm-{{ slurm_version }}.tar.bz2"
+slurm_conf_dir: /etc/slurm
+slurm_log_dir: /var/log/slurm
+slurm_spool_dir: /var/spool/slurm
+slurm_state_save_location: /var/lib/slurm/slurmctld
+slurm_install_prefix: /usr/local
+slurm_cuda_prefix: /usr/local/cuda
+slurm_configure: "./configure --prefix={{ slurm_install_prefix }}  --sysconfdir={{ slurm_conf_dir }}"
+slurm_configure_nvml: "./configure --prefix={{ slurm_install_prefix }}  --sysconfdir={{ slurm_conf_dir }} --with-nvml={{ slurm_cuda_prefix }}"
+slurm_cluster_name: river
+slurm_conf_template: "etc/slurm/slurm.conf.j2"
+slurm_dbd_conf_template: "etc/slurm/slurmdbd.conf.j2"
+slurm_cgroup_conf_file: "etc/slurm/cgroup.conf.j2"
+slurm_gres_conf_template: "etc/slurm/gres.conf.j2"
+slurm_node_reboot_timeout: 300
+slurm_defmempercpu: 2048
+slurm_max_job_time: "48:00:00"
+slurm_def_job_time: "4:00:00"
+slurm_user_home: /local/slurm
+slurm_username: slurm
+slurm_user_uid: 64000
 SLURM_ACCOUNTING_HOST: '{{groups.slurm_master[0]|default("slurmdbd")}}'
 SLURM_ACCOUNTING_DB_NAME: "slurm"
 SLURM_ACCOUNTING_DB_USER: "slurm"
-SLURM_ACCOUNTING_DB_PASS: "ua7diKee"
+SLURM_ACCOUNTING_DB_PASS: "tgnguyen"

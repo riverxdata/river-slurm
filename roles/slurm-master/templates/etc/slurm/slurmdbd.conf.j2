@@ -1,0 +1,21 @@
+PidFile=/run/slurmdbd.pid
+LogFile=/var/log/slurm/slurmdbd.log
+DebugLevel=info
+MessageTimeout=10
+SlurmUser=slurm
+AuthType=auth/munge
+
+
+DbdHost={{SLURM_ACCOUNTING_HOST}}
+DbdPort=6819
+
+PluginDir={{ slurm_install_prefix }}/lib/slurm
+StorageType=accounting_storage/mysql
+StorageHost=localhost
+StoragePort=3306
+StorageUser={{SLURM_ACCOUNTING_DB_USER}}
+StoragePass={{SLURM_ACCOUNTING_DB_PASS}}
+StorageLoc={{SLURM_ACCOUNTING_DB_NAME}}
+
+
+TrackWCKey=yes

@@ -1,0 +1,5 @@
+- name: Slurmctld setup
+  service:
+      name: slurmctld
+      state: restarted
+      enabled: yes

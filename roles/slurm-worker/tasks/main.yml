@@ -1,105 +1,32 @@
-# slurm-worker/tasks/main.yml
 ---
+- name: Add cgroups to grub options to control cpus and memory
+  lineinfile:
+      dest: /etc/default/grub
+      insertafter: '^GRUB_CMDLINE_LINUX=[^\\$]'
+      line: 'GRUB_CMDLINE_LINUX="${GRUB_CMDLINE_LINUX} cgroup_enable=memory swapaccount=1"'
+  register: update_grub
 
-- block:
-    - name: Install required SLURM packages (Debian/Ubuntu)
-      package:
-        name:
-          - libpmi0-dev
-          - libslurm-dev
-          - libslurm-perl
-          - libslurmdb-perl
-          - slurm-client
-          - slurm-wlm-torque
-          - sview
-        state: '{{ pkg_install_state }}'
-    # these are present in some but not all releases of Debian/Ubuntu;
-    # rather than writing complex `when:` clauses, it's just easier to
-    # try to install them and ignore failure...
-    - name: Install optional SLURM packages (Debian/Ubuntu)
-      package:
-        name:
-          - slurm-drmaa-dev
-        state: '{{ pkg_install_state }}'
-      ignore_errors: yes
-  when: 'is_debian_8_or_later or is_ubuntu_15_10_or_later'
+- name: update grub
+  block:
+      - name: update grub
+        command: update-grub
+        register: update_grub_cmd
+        changed_when: update_grub_cmd.rc == 0
+      - name: reboot after updating grub config
+        reboot:
+            reboot_timeout: "{{ slurm_node_reboot_timeout }}"
 
+  when: update_grub.changed and ansible_os_family == "Debian"
+- name: Deploy SLURM cgroup configuration file (main)
+  copy:
+      src: "etc/slurm/cgroup.conf"
+      dest: "/etc/slurm/cgroup.conf"
+      mode: 0444
+      owner: root
+      group: root
 
-- block:
-  # since all the SLURM binaries are bundled in a single package
-  # `slurm-llnl`, we have to install it and *then* stop all the services
-    - name: Install required SLURM packages (older Debian/Ubuntu)
-      package:
-        name:
-          - libpmi0-dev
-          - libslurm-dev
-          - libslurm-perl
-          - libslurmdb-perl
-          - slurm-llnl
-          - slurm-llnl-sview
-          - slurm-llnl-torque
-        state: '{{ pkg_install_state }}'
-    - service:
-        name: 'slurm-llnl'
-        enabled: no
-        state: stopped
-  when: 'is_debian_or_ubuntu and not (is_debian_8_or_later or is_ubuntu_15_10_or_later)'
-  
-- name: Set SLURM worker playbook params (Debian/Ubuntu)
-  set_fact:
-    slurmd_packages:
-      - libpam-slurm
-      - slurmd
-      - slurm-wlm-basic-plugins
-  when: 'is_debian_8_or_later or is_ubuntu_15_10_or_later'
-
-
-- name: Set SLURM worker playbook params (older Debian/Ubuntu)
-  set_fact:
-    slurmd_packages:
-      - libpam-slurm
-      - slurm-llnl
-      - slurm-llnl-basic-plugins
-  when: 'is_debian_or_ubuntu and not (is_debian_8_or_later or is_ubuntu_15_10_or_later)'
-
-
-- name: Set SLURM worker service name (Debian/Ubuntu)
-  set_fact:
-    slurmd_service: 'slurmd'
-  when: 'is_debian_compatible and (is_debian_8_or_later or is_ubuntu_15_10_or_later)'
-
-
-- name: Set SLURM worker service name (older Debian/Ubuntu)
-  set_fact:
-    slurmd_service: 'slurm-llnl'
-  when: 'is_debian_compatible and not (is_debian_8_or_later or is_ubuntu_15_10_or_later)'
-
-- name: Deploy SLURM configuration files
-  tags:
-    - slurm
-  template:
-    src: '{{item}}.j2'
-    dest: '/etc/slurm-llnl/{{item}}'
-    owner: root
-    group: root
-    mode: 0444
-  loop:
-    - gres.conf
-
-- name: Deploy SLURM cgroup configuration
-  tags:
-    - slurm
-    - slurm-worker
-    - cgroups
-  import_tasks: cgroup.yml
-  when: '"cgroup" in slurm_taskplugin or "cgroup" in slurm_proctracktype or "cgroup" in slurm_jobacctgathertype'
-
-- name: Install SLURM worker packages
-  package:
-    name: '{{slurmd_packages}}'
-    state: '{{ pkg_install_state }}'
-
-- name: Ensure SLURMd starts at boot
+- name: Ensure slurmd daemon is up
   service:
-    name: '{{slurmd_service}}'
-    enabled: yes
+      name: slurmd
+      enabled: yes
+      state: restarted
