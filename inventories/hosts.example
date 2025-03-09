@@ -12,5 +12,4 @@ slurm_worker
 ansible_user=vagrant
 ansible_user=vagrant
 slurm_password=justrandompassword
-default_password=riverxdata
-users=river02
+slurm_account_db_pass=riverxdata

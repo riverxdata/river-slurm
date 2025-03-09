@@ -1,6 +1,6 @@
 # RIVERXDATA: slurm cluster for minimal installization
 ClusterName=riverxdata
-ControlMachine={{ groups['slurm_master'] | join(' ') }}
+ControlMachine={{ groups['slurm_master'][0] }}
 MpiDefault=none
 ReturnToService=2
 SlurmctldPidFile=/var/run/slurmctld.pid
@@ -51,7 +51,7 @@ CryptoType=crypto/munge
 #
 {% for host in groups.slurm_worker %}
 # {{host}}
-NodeName={{host}} RealMemory={{hostvars[host].ansible_memtotal_mb|int - 384}} CPUs={{hostvars[host].ansible_processor_vcpus}} Sockets={{hostvars[host].ansible_processor_vcpus}} CoresPerSocket=1 ThreadsPerCore=1 {% if hostvars[host].gpu_count_total|default(0) > 0 %}{% for model in hostvars[host].gpu_count %} Gres=gpu:{{model}}:{{hostvars[host].gpu_count[model]}}{% endfor %}{% endif %}
+NodeName={{host}} RealMemory={{hostvars[host].ansible_memtotal_mb|int - 1024}} CPUs={{hostvars[host].ansible_processor_vcpus|int - 1}} Sockets={{hostvars[host].ansible_processor_vcpus|int - 1}} CoresPerSocket=1 ThreadsPerCore=1 {% if hostvars[host].gpu_count_total|default(0) > 0 %}{% for model in hostvars[host].gpu_count %} Gres=gpu:{{model}}:{{hostvars[host].gpu_count[model]}}{% endfor %}{% endif %}
 
 {% endfor %}
 

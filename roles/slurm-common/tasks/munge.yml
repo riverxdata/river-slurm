@@ -15,7 +15,7 @@
       mode: "0400"
 
 - name: Configure MUNGE
-  copy: src=etc/munge/munge.key
+  template: src=etc/munge/munge.key.j2
       dest=/etc/munge/munge.key
       owner=munge
       group=munge

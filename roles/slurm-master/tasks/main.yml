@@ -1,10 +1,4 @@
 ---
-- name: Ensure munge service is running
-  service:
-      name: munge
-      state: started
-      enabled: yes
-
 - name: Slurmdbd setup
   include_tasks: slurmdbd.yml
 

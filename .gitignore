@@ -18,11 +18,6 @@ real_hosts
 # information for Eclipse / Flash Builder.
 .vagrant
 .env
-geerlingguy.docker
-abims_sbr.singularity
-mambaorg.micromamba
-gantsign.golang
-robertdebock.java
 env
 
 Vagrantfile

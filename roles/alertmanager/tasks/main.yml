@@ -1,51 +1,59 @@
 ---
-- name: create config dir
+- name: Set condition for Slack integration
+  set_fact:
+      slack_configured: "{{ slack_api_url is defined and slack_channel is defined }}"
+
+- name: Create config directory
   file:
       path: "{{ alertmanager_config_dir }}"
       state: directory
       mode: "0755"
+  when: slack_configured | default(false)
 
-- name: install config file
+- name: Install config file
   template:
       src: "{{ alertmanager_config_src }}"
       dest: "{{ alertmanager_config_dir }}/alertmanager.yml"
       owner: root
       group: root
-      mode: 0644
+      mode: "0644"
   notify: restart alertmanager
+  when: slack_configured | default(false)
 
-- name: Ensure Python 2 dependencies are installed via OS packages
-  when: (ansible_python.version.major==2) and (ansible_python.version.minor==7)
+- name: Ensure Python dependencies are installed
+  when: slack_configured | default(false)
   block:
-      - name: install python-docker
+      - name: Install Python 2 dependencies
         package:
             name: python-docker
+        when: ansible_python.version.major == 2 and ansible_python.version.minor == 7
 
-- name: Ensure Python 3 dependencies are installed via OS packages
-  when: ansible_python.version.major==3
-  block:
-      - name: install python3-docker
+      - name: Install Python 3 dependencies
         package:
             name: python3-docker
+        when: ansible_python.version.major == 3
 
-- name: create a persistent docker volume for metrics
+- name: Create a persistent Docker volume for metrics
   docker_volume:
       name: "{{ alertmanager_docker_volume_name }}"
-      state: "present"
+      state: present
+  when: slack_configured | default(false)
 
-- name: install systemd unit file
+- name: Install systemd unit file
   template:
       src: templates/docker.alertmanager.service.j2
       dest: "/etc/systemd/system/{{ alertmanager_svc_name }}"
       owner: root
       group: root
-      mode: 0644
+      mode: "0644"
   notify: restart alertmanager
+  when: slack_configured | default(false)
 
-- name: configure service
+- name: Configure service
   systemd:
       name: "{{ alertmanager_svc_name }}"
       state: "{{ alertmanager_state }}"
       enabled: "{{ alertmanager_enabled }}"
       daemon_reload: yes
   notify: restart alertmanager
+  when: slack_configured | default(false)

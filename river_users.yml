@@ -1,0 +1,6 @@
+- name: Common set up
+  hosts: slurm_master
+  become: true
+  become_user: root
+  roles:
+      - slurm-account

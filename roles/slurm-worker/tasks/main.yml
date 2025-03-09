@@ -25,6 +25,12 @@
       owner: root
       group: root
 
+- name: Ensure munge is restarted
+  service:
+      name: munge
+      enabled: yes
+      state: restarted
+
 - name: Ensure slurmd daemon is up
   service:
       name: slurmd

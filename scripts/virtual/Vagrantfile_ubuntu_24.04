@@ -1,0 +1,44 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+VAGRANTFILE_API_VERSION = "2"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.vm.box_download_insecure = true
+
+  # Define the controller node with Ubuntu 24.04
+  config.vm.define "controller-01" do |controller|
+    controller.vm.box = "bento/ubuntu-24.04"
+    controller.vm.box_version = "202502.21.0"
+    controller.vm.hostname = "controller-01"
+    controller.vm.network :private_network, ip: "192.168.58.10"
+    
+    controller.vm.provider :libvirt do |v|
+      v.memory = 2048
+      v.cpus = 2
+      v.nested = true
+      v.graphics_type = "vnc"
+      v.video_type = "qxl"
+    end
+
+    controller.vm.provision "file", source: "~/.ssh/id_rsa.pub", destination: "~/.ssh/authorized_keys"
+  end
+
+  # Define the worker node with Ubuntu 24.04
+  config.vm.define "worker-01" do |worker|
+    worker.vm.box = "bento/ubuntu-24.04" 
+    worker.vm.box_version = "202502.21.0"
+    worker.vm.hostname = "worker-01"
+    worker.vm.network :private_network, ip: "192.168.58.11"
+    
+    worker.vm.provider :libvirt do |v|
+      v.memory = 3072
+      v.cpus = 3
+      v.nested = true
+      v.graphics_type = "vnc"
+      v.video_type = "qxl"
+    end
+
+    worker.vm.provision "file", source: "~/.ssh/id_rsa.pub", destination: "~/.ssh/authorized_keys"
+  end
+end
