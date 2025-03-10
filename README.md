@@ -106,10 +106,11 @@ srun --pty bash
 
 ### Monitoring 
 The master node should be the public network that allows users to login.
-For monitoring, the admin can set up the reverse proxy and at least using ssh tunnel to view the dashboard at http://localhost:9000 at the master node
-
-Open the url at master node at `https
-
+For monitoring, the admin can set up the reverse proxy and at least using ssh tunnel to view the dashboard at http://localhost:3000 at the master node
+Or access via ssh tunnel
+```bash
+ssh -N -L 3000:localhost:3000 <user name>@<master node>
+```
 
 
 ## Developer
