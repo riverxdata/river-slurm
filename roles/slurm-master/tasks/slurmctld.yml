@@ -1,0 +1,12 @@
+---
+- name: Ensure munge is restarted
+  service:
+      name: munge
+      enabled: yes
+      state: restarted
+
+- name: Slurmctld setup
+  service:
+      name: slurmctld
+      state: restarted
+      enabled: yes

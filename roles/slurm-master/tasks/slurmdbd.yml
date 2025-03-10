@@ -1,0 +1,80 @@
+---
+- name: Install dependencies
+  apt:
+      name: "{{ item }}"
+      state: present
+  with_items:
+      - mariadb-server
+      - python3-mysqldb
+
+- name: Setup slurm db user
+  mysql_user:
+      name: "{{SLURM_ACCOUNTING_DB_USER}}"
+      host: "{{item}}"
+      password: "{{SLURM_ACCOUNTING_DB_PASS}}"
+      priv: "{{SLURM_ACCOUNTING_DB_NAME}}.*:ALL"
+      state: present
+      login_unix_socket: /var/run/mysqld/mysqld.sock
+  with_items:
+      - localhost
+      - "{{SLURM_ACCOUNTING_HOST}}"
+
+- name: Create DB for SLURMDBD
+  tags:
+      - slurm
+      - slurmdbd
+  mysql_db:
+      name: "{{ SLURM_ACCOUNTING_DB_NAME }}"
+      state: present
+      login_unix_socket: /var/run/mysqld/mysqld.sock
+
+- name: Deploy SLURMDBD configuration
+  template:
+      src: "{{ slurm_dbd_conf_template }}"
+      dest: /etc/slurm/slurmdbd.conf
+      owner: slurm
+      group: slurm
+      mode: "0600"
+
+- name: Ensure slurmdbd daemon is up
+  service:
+      name: slurmdbd
+      enabled: yes
+      state: restarted
+
+- name: Ensure slurmctl deamon is up
+  service:
+      name: slurmctld
+      state: started
+      enabled: yes
+
+- name: Create cluster in accounting database
+  tags:
+      - slurm
+  shell: |
+      sacctmgr --parsable --noheader list cluster | grep '^riverxdata|' \
+        || sacctmgr -i -Q add cluster riverxdata
+
+- name: Create an account for default cluster
+  tags:
+      - slurm
+  shell: |
+      sacctmgr --immediate --parsable --noheader list account Cluster=riverxdata  | grep '^root|' \
+        || sacctmgr -i --quiet add account root Cluster=riverxdata
+
+- name: Add default user to cluster
+  tags:
+      - slurm
+  shell: |
+      set -ex
+      # add a SLURM account for all non-system users; assume a user is a system user
+      # if and only if their home directory is under '/home'
+      getent passwd | \
+        (while IFS=: read name _ uid gid _ home _; do
+          if [ $(expr match "$home" /home) -eq 5 ]; then
+            if (sacctmgr --immediate --parsable --noheader list user Account=root | grep "^$name|"); then
+              continue
+            fi
+            sacctmgr --immediate --quiet add user "$name" DefaultAccount=root
+          fi
+        done)

@@ -1,0 +1,50 @@
+---
+- name: Add new users
+  user:
+      name: "{{ item }}"
+      password: "{{ default_password | password_hash('sha512') }}"
+      shell: /bin/bash
+      home: "/home/{{ item }}"
+      create_home: yes
+  loop: "{{ users.split(',') }}"
+
+- name: Expire password to force change on first login
+  command: chage -d 0 "{{ item }}"
+  loop: "{{ users.split(',') }}"
+
+- name: Add default user to cluster
+  tags:
+      - slurm
+  shell: |
+      set -ex
+      # add a SLURM account for all non-system users; assume a user is a system user
+      # if and only if their home directory is under '/home'
+      getent passwd | \
+        (while IFS=: read name _ uid gid _ home _; do
+          if [ $(expr match "$home" /home) -eq 5 ]; then
+            if (sacctmgr --immediate --parsable --noheader list user Account=root | grep "^$name|"); then
+              continue
+            fi
+            sacctmgr --immediate --quiet add user "$name" DefaultAccount=root
+          fi
+        done)
+
+- name: Delete users from system
+  user:
+      name: "{{ item }}"
+      state: absent
+      remove: yes
+  loop: "{{ delete_users.split(',') }}"
+  when: delete_users | length > 0
+
+- name: Remove user from Slurm
+  tags:
+      - slurm
+  shell: |
+      set -ex
+      if sacctmgr --immediate --parsable --noheader list user Account=root | grep -q "^{{ item }}|"; then
+        sacctmgr --immediate --quiet delete user "{{ item }}"
+      fi
+  loop: "{{ delete_users.split(',') }}"
+  when: delete_users | length > 0
+  ignore_errors: yes

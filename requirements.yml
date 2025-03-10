@@ -1,16 +1,13 @@
 ---
 roles:
-- src: robertdebock.java
-  version: "4.2.0"
+    - src: robertdebock.java
+      version: "4.2.0"
 
-- src: gantsign.golang
-  version: "2.10.2"
+    - src: gantsign.golang
+      version: "2.10.2"
 
-- src: mambaorg.micromamba
-  version: "v1.2.4"
+    - src: geerlingguy.docker
+      version: "7.1.0"
 
-- src: geerlingguy.docker
-  version: "7.1.0"
-
-- src: abims_sbr.singularity
-  version: 3.7.1-4
+    - src: nvidia.nvidia_driver
+      version: "v2.3.0"

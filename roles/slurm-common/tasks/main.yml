@@ -1,57 +1,103 @@
 ---
-- name: Create `slurm` system group
-  group:
-    name: slurm
-    system: yes
-  tags:
-    - slurm
+- name: Install Slurm dependencies
+  apt:
+      name: "{{ item }}"
+      state: present
+  with_items:
+      - build-essential
+      - fakeroot
+      - devscripts
+      - equivs
+      - libpam0g-dev
+      - libdbus-1-dev
+      - libev-dev
+      - libevent-dev
+      - zlib1g
+      - zlib1g-dev
+      - pandoc
+      - libmunge-dev
+      - libmariadb-dev
+      - libmariadbclient-dev-compat
+      - python3-minimal
 
-- name: Create `slurm` system user
-  user:
-    name: slurm
-    group: slurm
-    system: yes
-  tags:
-    - slurm
-
-- name: Create work directory {{item}}
+- include_tasks: user_and_group.yml
+- include_tasks: munge.yml
+- name: Create slurm directory
   file:
-    path: '{{item}}'
-    state: directory
-    owner: slurm
-    group: slurm
-    recurse: yes
-  loop:
-    - /etc/slurm-llnl
-    - /var/log/slurm
-    - /var/run/slurm
-    - /var/spool/slurm
-  tags:
-    - slurm
+      path: "{{ item }}"
+      state: directory
+      mode: 0755
+      owner: "{{ slurm_username }}"
+  with_items:
+      - "{{ slurm_build_dir }}"
+      - "{{ slurm_conf_dir }}"
+      - "{{ slurm_log_dir }}"
+      - "{{ slurm_spool_dir }}"
+      - "{{ slurm_state_save_location }}"
 
-- import_tasks: munge.yml
+- name: Ensure munge service is running
+  service:
+      name: munge
+      state: started
+      enabled: yes
 
-- name: Deploy SLURM configuration file
-  tags:
-    - slurm
+- name: Check if Slurm services are already installed
+  stat:
+      path: "/etc/systemd/system/{{ item }}"
+  register: slurm_services_status
+  with_items:
+      - slurmctld.service
+      - slurmd.service
+      - slurmdbd.service
+
+- name: Determine if Slurm is already built
+  set_fact:
+      slurm_already_built: "{{ slurm_services_status.results | map(attribute='stat.exists') | list | select('equalto', false) | list | length == 0 }}"
+
+- name: Download Slurm source
+  get_url:
+      url: "https://download.schedmd.com/slurm/slurm-{{ slurm_version }}.tar.bz2"
+      dest: "/tmp/slurm-{{ slurm_version }}.tar.bz2"
+      mode: 0644
+  when: not slurm_already_built
+
+- name: Extract Slurm source
+  become: true
+  become_user: root
+  unarchive:
+      src: "/tmp/slurm-{{ slurm_version }}.tar.bz2"
+      dest: "/tmp"
+      remote_src: yes
+  when: not slurm_already_built
+
+- name: Configure Slurm manually
+  shell: "cd {{ slurm_build_dir }} && {{ slurm_configure }}"
+  when: not slurm_already_built
+
+- name: Build Slurm
+  shell: "cd {{ slurm_build_dir }} && make -j$(nproc) install"
+  become: true
+  become_user: root
+  when: not slurm_already_built
+
+- name: Update ld cache
+  command: ldconfig -n {{ slurm_install_prefix }}/lib
+  when: not slurm_already_built
+
+- name: Copy service files
+  copy:
+      src: "{{ slurm_build_dir }}/etc/{{ item }}"
+      dest: "/etc/systemd/system/{{ item }}"
+      remote_src: yes
+      mode: "0644"
+  with_items:
+      - slurmctld.service
+      - slurmd.service
+      - slurmdbd.service
+  when: not slurm_already_built
+
+- name: Add Slurm and cgroup configuration
   template:
-    src: '{{ slurm_conf_file|default("slurm.conf.j2") }}'
-    dest: '/etc/slurm-llnl/slurm.conf'
-    owner: root
-    group: root
-    mode: 0444
-  
-# - name: Recusrively change owner:group of item {{item}}
-#   file:
-#     path: '{{item}}'
-#     state: directory
-#     owner: slurm
-#     group: slurm
-#     recurse: yes
-#   loop:
-#     - /etc/slurm-llnl
-#     - /var/log/slurm
-#     - /var/run/slurm
-#     - /var/spool/slurm
-#   tags:
-#     - slurm
+      src: "{{ slurm_conf_template }}"
+      dest: "/etc/slurm/slurm.conf"
+      mode: "0644"

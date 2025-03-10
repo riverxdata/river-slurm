@@ -1,68 +1,39 @@
 ---
-- name: Common set up
+- name: All
   hosts: all
   become: true
   become_user: root
   roles:
-    # - hosts
-    # - slurm-common
-    - utilities
-#     - mambaorg.micromamba
-#     - geerlingguy.docker
-#     - prometheus-node-exporter
-#     - abims_sbr.singularity
-#     - nextflow
+      - hosts
+      - geerlingguy.docker
+      - prometheus-node-exporter
+      - slurm-common
 
-# - name: Slurm master
-#   hosts: slurm_master
-#   become: true
-#   become_user: root
-#   roles:
-#     # - role: s3storage
-#     #   S3_MOUNTS:
-#     #     - fs: 'example_project'
-#     - role: nis
-#       NIS_MASTER: "{{groups.slurm_master[0]}}"
-#     - slurm-master
-#     - prometheus-slurm-exporter
-#     - prometheus
-#     - grafana
-#     - reverse-proxy
-#     - alertmanager
-#     - rsyslog_server
-#     - nextflow-demo
-    
-#     - role: 'nfs-server'
-#       NFS_EXPORTS:
-#         - path: '/home/'
-#           clients: "{{groups.slurm_worker + groups.slurm_submit|default([])}}"
-#         - path: '/data/'
-#           clients: "{{groups.slurm_worker + groups.slurm_submit|default([])}}"
-#   tasks:
-#     - service:
-#         name=slurmctld
-#         state=restarted
-#     - service:
-#         name=slurmdbd
-#         state=restarted
-
-# - name: Slurm worker
+- name: Login and controller
+  hosts: slurm_master
+  become: true
+  become_user: root
+  roles:
+      - slurm-master
+      - prometheus-slurm-exporter
+      - prometheus
+      - grafana
+      - alertmanager
+      # - rsyslog_server
+      # - role: "nfs-server"
+      #   NFS_EXPORTS:
+      #       - path: "/home/"
+      #         clients: "{{groups.slurm_worker|default([])}}"
+      #       - path: "/data/"
+      #         clients: "{{groups.slurm_worker|default([])}}"
+# - name: Worker
 #   hosts: slurm_worker
 #   become: true
 #   become_user: root
 #   roles:
-#     - role: nis
-#       NIS_MASTER: "{{groups.slurm_master[0]}}"
-#     - slurm-worker
-#     - server-code
-#     - rsyslog_client
-#     - role: 'nfs-client'
-#       NFS_MOUNTS:
-#         - fs: '{{groups.slurm_master[0]}}:/home'
-#           mountpoint: '/home'
-#         # - fs: '{{groups.slurm_master[0]}}:/data'
-#         #   mountpoint: '/data'
-#   tasks:
-#     - service:
-#         name=slurmd
-#         state=restarted
+#       - slurm-worker
+#       - rsyslog_client
+#       - role: "nfs-client"
+#         NFS_MOUNTS:
+#             - fs: "{{groups.slurm_master[0]}}:/home"
+#               mountpoint: "/home"

@@ -1,0 +1,59 @@
+# RIVERXDATA: slurm cluster for minimal installization
+ClusterName=riverxdata
+ControlMachine={{ groups['slurm_master'][0] }}
+MpiDefault=none
+ReturnToService=2
+SlurmctldPidFile=/var/run/slurmctld.pid
+SlurmctldPort=6817
+SlurmdPidFile=/var/run/slurmd.pid
+SlurmdPort=6818
+SlurmdSpoolDir= {{ slurm_spool_dir | default('/var/spool/slurmd') }}
+SlurmUser=slurm
+StateSaveLocation= {{ slurm_state_save_location |default('/var/lib/slurm/slurmctld')}}
+SwitchType=switch/none
+#
+# TIMERS
+InactiveLimit=0
+KillWait=30
+MinJobAge=300
+SlurmctldTimeout=120
+SlurmdTimeout=300
+Waittime=0
+# SCHEDULING
+SchedulerType=sched/backfill
+SelectType={{slurm_selecttype|default('select/cons_tres')}}
+SelectTypeParameters={{slurm_selecttypeparameters|default('CR_Core_Memory')}}
+DefMemPerCPU={{slurm_defmempercpu|int}}
+#
+AccountingStorageType=accounting_storage/slurmdbd
+AccountingStorageEnforce=associations,limits,qos
+AccountingStoreFlags=job_comment
+AccountingStorageHost={{SLURM_ACCOUNTING_HOST}}
+AccountingStoragePort=6819
+
+JobAcctGatherFrequency=30
+JobAcctGatherType=jobacct_gather/cgroup
+ProctrackType=proctrack/cgroup
+PluginDir={{ slurm_install_prefix }}/lib/slurm
+TaskPlugin=task/cgroup,task/affinity
+DebugFlags=cgroup
+SlurmdDebug=debug
+
+SlurmctldDebug=info
+SlurmctldLogFile= {{ slurm_log_dir | default('/var/log/slurm')}}/slurmctld.log
+SlurmdLogFile= {{ slurm_log_dir | default('/var/log/slurm')}}/slurmd.log
+
+# COMPUTE NODES
+AuthType=auth/munge
+CryptoType=crypto/munge
+
+## Cluster nodes
+#
+{% for host in groups.slurm_worker %}
+# {{host}}
+NodeName={{host}} RealMemory={{hostvars[host].ansible_memtotal_mb|int - 1024}} CPUs={{hostvars[host].ansible_processor_vcpus|int - 1}} Sockets={{hostvars[host].ansible_processor_vcpus|int - 1}} CoresPerSocket=1 ThreadsPerCore=1 {% if hostvars[host].gpu_count_total|default(0) > 0 %}{% for model in hostvars[host].gpu_count %} Gres=gpu:{{model}}:{{hostvars[host].gpu_count[model]}}{% endfor %}{% endif %}
+
+{% endfor %}
+
+## Cluster partitions
+PartitionName=main Nodes={% for host in groups.slurm_worker %}{{host}},{%endfor%} MaxTime=INFINITE State=UP Default=YES
