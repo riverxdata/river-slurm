@@ -2,8 +2,8 @@ slurm_exporter_container: "{{ 'nttg8100/prometheus-slurm-exporter_arm64:1.0.0' i
 slurm_exporter_svc_name: "docker.slurm-exporter.service"
 slurm_exporter_state: started
 slurm_exporter_enabled: yes
-slurm_lib: "{{ '/usr/lib/aarch64-linux-gnu/slurm-wlm' if ansible_architecture == 'aarch64' else '/usr/lib/x86_64-linux-gnu/slurm-wlm' }}"
-slurm_install_prefix: /usr
+slurm_lib: "{{ '/usr/lib/aarch64-linux-gnu/slurm-wlm' if ansible_architecture == 'aarch64' else '/usr/local/lib/slurm' }}"
+slurm_install_prefix: /usr/local
 
 prometheus_config_dir: /etc/prometheus
 prometheus_cfg_endpoint_dir: "{{ prometheus_config_dir }}/endpoints"
