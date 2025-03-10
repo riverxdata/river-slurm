@@ -50,7 +50,7 @@ create_ssh_key(){
 
 up_vm_and_inventory(){
     # CREATE VIRTUAL MACHINE and INVENTORY
-    cp ${ROOT_DIR}/inventories/hosts.examples ${ROOT_DIR}/inventories/hosts
+    cp ${ROOT_DIR}/inventories/hosts.example ${ROOT_DIR}/inventories/hosts
     cp ${ROOT_DIR}/scripts/virtual/Vagrantfile_${OS} ${ROOT_DIR}/scripts/virtual/Vagrantfile
     cd ${ROOT_DIR}/scripts/virtual && vagrant up
     cd ${ROOT_DIR}

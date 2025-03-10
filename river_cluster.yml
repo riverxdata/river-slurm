@@ -7,6 +7,7 @@
       - hosts
       - geerlingguy.docker
       - prometheus-node-exporter
+      - prometheus-slurm-exporter
       - slurm-common
 
 - name: Login and controller
@@ -15,25 +16,24 @@
   become_user: root
   roles:
       - slurm-master
-      - prometheus-slurm-exporter
       - prometheus
       - grafana
       - alertmanager
-      # - rsyslog_server
-      # - role: "nfs-server"
-      #   NFS_EXPORTS:
-      #       - path: "/home/"
-      #         clients: "{{groups.slurm_worker|default([])}}"
-      #       - path: "/data/"
-      #         clients: "{{groups.slurm_worker|default([])}}"
-# - name: Worker
-#   hosts: slurm_worker
-#   become: true
-#   become_user: root
-#   roles:
-#       - slurm-worker
-#       - rsyslog_client
-#       - role: "nfs-client"
-#         NFS_MOUNTS:
-#             - fs: "{{groups.slurm_master[0]}}:/home"
-#               mountpoint: "/home"
+      - rsyslog_server
+      - role: "nfs-server"
+        NFS_EXPORTS:
+            - path: "/home/"
+              clients: "{{groups.slurm_worker|default([])}}"
+            - path: "/data/"
+              clients: "{{groups.slurm_worker|default([])}}"
+- name: Worker
+  hosts: slurm_worker
+  become: true
+  become_user: root
+  roles:
+      - slurm-worker
+      - rsyslog_client
+      - role: "nfs-client"
+        NFS_MOUNTS:
+            - fs: "{{groups.slurm_master[0]}}:/home"
+              mountpoint: "/home"

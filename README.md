@@ -70,6 +70,8 @@ default_password=<default password for users in the cluster; first login will en
 users=<comma-separated list of new usernames>
 slack_api_url=<Slack webhook URL for cluster status notifications>
 slack_channel=<Slack channel for notifications>
+admin_user =<Grafana admin user>
+admin_password=<Grafana admin password>
 ```
 ### Run playbook for Cluster
 
@@ -101,6 +103,14 @@ squeue
 # submit interactive
 srun --pty bash
 ```
+
+### Monitoring 
+The master node should be the public network that allows users to login.
+For monitoring, the admin can set up the reverse proxy and at least using ssh tunnel to view the dashboard at http://localhost:9000 at the master node
+
+Open the url at master node at `https
+
+
 
 ## Developer
 Install vagrant and relative provider, for Ubuntu, it automatically install the libvirt and run the ansible playbook
