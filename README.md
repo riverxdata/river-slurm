@@ -35,7 +35,11 @@ For simplified tool installation, we recommend using [**river-utils**](https://g
             - nfs-client: Access files on the controller
 
 ## Production
-For slurm
+In a production environment, it is recommended to set up SLURM on multiple nodes to fully utilize its job scheduling capabilities. However, if you only have access to a single machine, you can still simulate a multi-node SLURM cluster by creating virtual machines.
+
+It is recommended to use libvirt with QEMU/KVM, as it provides near-native performance with minimal overhead. Libvirt allows you to manage virtual machines efficiently and configure them as separate SLURM nodes (controller, compute nodes, etc.)
+
+It required additional setup to mount/increase the devices (disks, graphic cards,...). For additional informations, follow [libvirt documentation](https://libvirt.org/manpages/libvirtd.html)
 ### Install ansible and required tasks
 ```bash
 # to show agruments
