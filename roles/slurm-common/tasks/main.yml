@@ -101,5 +101,5 @@
       src: "{{ slurm_conf_template }}"
       owner: slurm
       group: slurm
-      dest: "/etc/slurm/slurm.conf"
+      dest: /etc/slurm/slurm.conf
       mode: "0644"
