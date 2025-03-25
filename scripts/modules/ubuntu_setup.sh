@@ -14,14 +14,14 @@ install_vagrant_ubuntu() {
 
   # Download and install Vagrant
   echo "Downloading Vagrant..."
-  curl -O https://releases.hashicorp.com/vagrant/${VAGRANT_VERSION}/vagrant_${VAGRANT_VERSION}_x86_64.deb
+  curl -O https://releases.hashicorp.com/vagrant/2.4.3/vagrant_2.4.3-1_amd64.deb
 
   echo "Installing Vagrant..."
-  sudo dpkg -i vagrant_${VAGRANT_VERSION}_x86_64.deb
+  sudo dpkg -i vagrant_2.4.3-1_amd64.deb
 
   # Clean up
   echo "Cleaning up..."
-  rm vagrant_${VAGRANT_VERSION}_x86_64.deb
+  rm vagrant_2.4.3-1_amd64.deb
   echo "Vagrant installation completed."
 }
 
@@ -42,7 +42,10 @@ install_virtual_machine_ubuntu() {
     sudo usermod -a -G "${LIBVIRT_GROUP}" "$(whoami)"
     echo "You may need to start a new shell to use Vagrant interactively."
   fi
+  vagrant plugin install vagrant-libvirt
 }
+
+export VAGRANT_DEFAULT_PROVIDER=libvirt
 
 # Full setup for Ubuntu
 setup_ubuntu() {

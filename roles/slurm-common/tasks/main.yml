@@ -96,10 +96,10 @@
       - slurmdbd.service
   when: not slurm_already_built
 
-- name: Add Slurm and cgroup configuration
+- name: Add slurm config
   template:
-      src: "{{ slurm_conf_template }}"
+      src: etc/slurm/slurm.conf.j2
+      dest: /etc/slurm/slurm.conf
       owner: slurm
       group: slurm
-      dest: "/etc/slurm/slurm.conf"
       mode: "0644"

@@ -1,6 +1,5 @@
 #!/bin/bash
 # CONFIG
-VAGRANT_VERSION="2.4.3"
 PYTHON_VERSION="3.9.13"
 if [ "$#" -lt 2 ]; then
     echo "Usage: $0 <UBUNTU_VERSION> <RUN_VM>"
@@ -23,12 +22,14 @@ case "$(uname)" in
     Darwin)
         echo "macOS detected."
         OS="macos"
+        setup_macos
         ;;
     Linux)
         echo "Ubuntu/Linux detected."
         export DEBIAN_FRONTEND=noninteractive
         OS="ubuntu"
         OS="${OS}_${UBUNTU_VERSION}"
+	    setup_ubuntu
         ;;
     *)
         echo "Unsupported operating system."
@@ -38,14 +39,9 @@ esac
 
 install_python_venv
 ansible_galaxy_install
-
-if [ "${OS}" == "macos" ]; then
-    setup_macos
-elif [ "${OS}" == "ubuntu" ]; then
-    setup_ubuntu
-fi
+create_ssh_key
 
 if [ "${RUN_VM}" == true ]; then
-    up_vm_and_inventory
+    up_vm_and_ssh inventory
     setup_cluster
 fi

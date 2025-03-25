@@ -18,7 +18,7 @@
 
   when: update_grub.changed and ansible_os_family == "Debian"
 - name: Deploy SLURM cgroup configuration file (main)
-  copy:
+  template:
       src: "etc/slurm/cgroup.conf"
       dest: "/etc/slurm/cgroup.conf"
       mode: 0444

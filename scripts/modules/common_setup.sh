@@ -1,4 +1,4 @@
-# 1. Install the ansible dependencies
+# Install the ansible dependencies
 # Function to check if Python3 is installed
 install_python_venv(){
     # Check if Python3 is installed
@@ -44,7 +44,6 @@ ansible_galaxy_install(){
 
 
 create_ssh_key(){
-    # CREATE SSH KEY
     yes n | ssh-keygen -q -t rsa -f ~/.ssh/id_rsa -C "" -N "" || echo "key exists"
 }
 
