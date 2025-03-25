@@ -5,11 +5,10 @@
   become_user: root
   roles:
       - hosts
+      - slurm-common
       - nis
       - geerlingguy.docker
       - prometheus-node-exporter
-      - prometheus-slurm-exporter
-      - slurm-common
 
 - name: Login and controller
   hosts: slurm_master
@@ -21,6 +20,7 @@
       - grafana
       - alertmanager
       - rsyslog_server
+      - prometheus-slurm-exporter
       - role: "nfs-server"
         NFS_EXPORTS:
             - path: "/home/"
