@@ -13,3 +13,7 @@ ansible_user=vagrant
 ansible_user=vagrant
 slurm_password=justrandompassword
 slurm_account_db_pass=riverxdata
+slack_api_url=<Slack webhook URL for cluster status notifications>
+slack_channel=<Slack channel for notifications>
+admin_user =<Grafana admin user>
+admin_password=<Grafana admin password>
