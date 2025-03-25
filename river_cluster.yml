@@ -5,6 +5,7 @@
   become_user: root
   roles:
       - hosts
+      - nis
       - geerlingguy.docker
       - prometheus-node-exporter
       - prometheus-slurm-exporter
@@ -33,6 +34,7 @@
   roles:
       - slurm-worker
       - rsyslog_client
+      - nvidia.nvidia_driver
       - role: "nfs-client"
         NFS_MOUNTS:
             - fs: "{{groups.slurm_master[0]}}:/home"
